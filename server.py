@@ -90,11 +90,19 @@ class Handler(SimpleHTTPRequestHandler):
             super().log_message(fmt, *args)
 
 if __name__ == '__main__':
-    host, port = '127.0.0.1', 8000
+    # Helyileg a 127.0.0.1-et használja, de ha a Renderen fut, átvált a kötelező 0.0.0.0-ra
+    host = os.environ.get("RENDER_HOST", "0.0.0.0" if os.environ.get("RENDER") else "127.0.0.1")
+    
+    # Render környezetben a PORT változót olvassa be (alapértelmezett: 10000), saját gépen marad a 8000
+    port = int(os.environ.get("PORT", 10000 if os.environ.get("RENDER") else 8000))
+    
     server = ThreadingHTTPServer((host, port), Handler)
     print(f'PixelForge Photo Editor running at http://{host}:{port}')
     print('Uploaded originals: data/inputs | Exported images: data/outputs')
     print('Press Ctrl+C to stop the server.')
-    try: server.serve_forever()
-    except KeyboardInterrupt: print('\nServer stopped.')
-    finally: server.server_close()
+    try: 
+        server.serve_forever()
+    except KeyboardInterrupt: 
+        print('\nServer stopped.')
+    finally: 
+        server.server_close()
